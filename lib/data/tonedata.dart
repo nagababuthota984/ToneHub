@@ -1,4 +1,4 @@
-import '../pages/toneitem.dart';
+import '../widgets/toneitem.dart';
 
 class ToneData {
   static final List<ToneItem> toneItems = List<ToneItem>.generate(

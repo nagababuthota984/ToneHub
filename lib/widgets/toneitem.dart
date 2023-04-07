@@ -17,7 +17,6 @@ class _ToneItemState extends State<ToneItem> {
       key: Key(widget.filePath),
       textColor: Colors.black,
       tileColor: Colors.white70,
-
     );
   }
 }

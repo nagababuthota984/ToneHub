@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tonehub/pages/homepage.dart';
+import 'package:tonehub/widgets/homepage.dart';
 
 void main() {
   runApp(const ToneHub());
