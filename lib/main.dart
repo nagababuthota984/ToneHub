@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tonehub/widgets/homepage.dart';
+import 'package:tonehub/widgets/homePage.dart';
 
 void main() {
   runApp(const ToneHub());
@@ -14,8 +14,7 @@ class ToneHub extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.lightBlue,
-      ),
+          colorSchemeSeed:  const Color(0x002C3091), useMaterial3: true),
       home: const HomePage(title: 'Tone Hub'),
     );
   }

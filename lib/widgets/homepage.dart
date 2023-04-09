@@ -1,9 +1,8 @@
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:tonehub/data/tonedata.dart';
+import 'package:tonehub/services/audioService.dart';
 import 'package:tonehub/widgets/toneitem.dart';
+import 'filePickBtn.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -19,9 +18,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _counter = 0;
   List<ToneItem> _displayableToneItems = List<ToneItem>.empty(growable: true);
-
+  final AudioService audioService = AudioService();
   @override
   void initState() {
     super.initState();
@@ -42,30 +40,37 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void pickFile() async {
-    var result = await FilePicker.platform.pickFiles(
-        dialogTitle: "Pick an mp3 file",
-        type: FileType.audio,
-        allowMultiple: false);
-    if (result == null)
-      return;
-    else {
-      if (result.paths.isNotEmpty && result.names.isNotEmpty) {
-        String fileName = result.names.first ?? "";
-        String filePath = result.paths.first ?? "";
-        if (fileName != "" && filePath != "") {
-          _displayableToneItems
-              .add(ToneItem(fileName: fileName, filePath: filePath));
-          setState(() {
-            _displayableToneItems;
-          });
-        }
-      }
-    }
+  Widget buildDialog(
+      String title, String content, String okContent, String cancelContent) {
+    return AlertDialog(
+      title: Text(title),
+      content: Text(content),
+      actions: <Widget>[
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.labelLarge,
+          ),
+          child: Text(cancelContent),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.labelLarge,
+          ),
+          child: Text(cancelContent),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    Color textColor = Colors.black;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -77,16 +82,51 @@ class _HomePageState extends State<HomePage> {
           final toneItem = _displayableToneItems[index];
           return ListTile(
             title: toneItem,
+            focusColor: Colors.blue,
             key: Key(toneItem.filePath),
+            textColor: textColor,
+            onTap: () {
+              onToneTap(toneItem);
+            },
           );
         },
-        onReorder: (int oldIndex, int newIndex) {},
+        onReorder: (int oldIndex, int newIndex) {
+          var tempToneitem = _displayableToneItems[newIndex];
+          _displayableToneItems[newIndex] = _displayableToneItems[oldIndex];
+          _displayableToneItems[oldIndex] = tempToneitem;
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: pickFile,
-        tooltip: 'Increment',
+        onPressed: addToneClicked,
+        tooltip: 'Add Ringtone',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void addToneClicked() async {
+    var toneItem = await pickFile();
+    if (!doesToneAlreadyExist(toneItem.id)) {
+      _displayableToneItems.add(toneItem);
+      updateToneItemsState(_displayableToneItems);
+    }
+  }
+
+  bool doesToneAlreadyExist(String fileId) {
+    return _displayableToneItems.isNotEmpty &&
+        _displayableToneItems.any((element) => element.id == fileId);
+  }
+
+  void onToneTap(ToneItem toneItem) async {
+    //handles list item tap.
+    if (!audioService.isPlaying) {
+      await audioService.playAudio(toneItem.filePath);
+    } else if (audioService.currentPlayingFilePath == toneItem.filePath) {
+      await audioService.pauseAudio();
+    } else if (audioService.currentPlayingFilePath != toneItem.filePath &&
+        audioService.isPlaying) {
+      await audioService.stopAudio();
+      await audioService.playAudio(toneItem.filePath);
+    }
   }
 }
