@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tonehub/data/tonedata.dart';
 import 'package:tonehub/services/audioService.dart';
+import 'package:tonehub/services/ringtoneService.dart';
 import 'package:tonehub/widgets/toneitem.dart';
 import 'filePickBtn.dart';
 
@@ -20,6 +21,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<ToneItem> _displayableToneItems = List<ToneItem>.empty(growable: true);
   final AudioService audioService = AudioService();
+  final RingtoneService ringtoneService = RingtoneService();
+  
   @override
   void initState() {
     super.initState();
@@ -81,7 +84,12 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, index) {
           final toneItem = _displayableToneItems[index];
           return ListTile(
-            title: toneItem,
+            title: ToneItem(
+              filePath: toneItem.filePath,
+              fileName: toneItem.fileName,
+              id: toneItem.id,
+              onSetRingtone: () => onSetRingtone(toneItem),
+            ),
             focusColor: Colors.blue,
             key: Key(toneItem.filePath),
             textColor: textColor,
@@ -127,6 +135,29 @@ class _HomePageState extends State<HomePage> {
         audioService.isPlaying) {
       await audioService.stopAudio();
       await audioService.playAudio(toneItem.filePath);
+    }
+  }
+
+  void onSetRingtone(ToneItem toneItem) async {
+    bool success = await ringtoneService.setRingtone(
+      toneItem.filePath,
+      toneItem.fileName,
+    );
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${toneItem.fileName} set as ringtone'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to set ringtone. Please grant permission.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }
